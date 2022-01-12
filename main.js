@@ -1,5 +1,6 @@
 let churchCount = document.getElementById("map-counter");
 let map = L.map('map').setView([42.70107, -84.60312], 12);
+let fileBaseUrl = 'https://davincikab.github.io/mission_filled/';
 
 // load a tile layer
 let osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -84,7 +85,7 @@ L.control.layers(baseLayers, overlay, { collapsed:false}).addTo(map);
 
 
 // fetch the data
-d3.csv('churches.csv')
+d3.csv(`${fileBaseUrl}churches.csv`)
 .then(data => {
     // console.log(data);
     let markers = createMarkers(data, true);
@@ -93,7 +94,7 @@ d3.csv('churches.csv')
     updateCount(data.length);
 });
 
-d3.csv('missionary.csv')
+d3.csv(`${fileBaseUrl}missionary.csv`)
 .then(data => {
     // console.log(data);
     let markers = createMarkers(data);
@@ -174,8 +175,8 @@ const autoCompleteIns = new autoComplete(
         placeHolder: "Search for Churches...",
         data: {
             src: async function() {
-                let churches = await d3.csv('churches.csv');
-                let missionaries = await d3.csv('missionary.csv');
+                let churches = await d3.csv(`${fileBaseUrl}churches.csv`);
+                let missionaries = await d3.csv(`${fileBaseUrl}missionary.csv`);
 
                 // 
                 // console.log(churches);
