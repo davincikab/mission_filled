@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin=""/>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.6/dist/css/autoComplete.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Zilla Slab","Georgia",serif;
+        }
+
+        .map-wrapper {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0.5rem;
+        }
+
+        .filter-container {
+            z-index: 1;
+        }
+
+        select {
+            appearance: none;
+            background-color: #fff;
+            border: 1px solid #c4c4c4;
+            border-radius: 0;
+            color: #222221;
+            font-family: inherit;
+            font-size: inherit;
+            min-height: 52px;
+            width: 100%;
+            padding: 0.5rem;
+        }
+
+        select + select {
+            margin-left: 1rem;
+        }
+
+        .filter {
+            display: flex;
+            flex-wrap: no-wrap;
+            width: 100%;
+            padding: 0;
+            justify-content: space-between;
+        }
+
+        .filter .has-value {
+            background-color: #e2382a;
+            background-image: url(../assets/icons/chevron_dropdown-white-8e9b3105a4.svg);
+            border-color: #e2382a;
+            color: #fff;
+            background-repeat: no-repeat;
+            background-position: 98%;
+        }
+
+
+        #map {
+            height: 80vh;
+            width: 100%;
+            z-index: 0;
+        }
+
+        .autoComplete_wrapper>input#autoComplete {
+            color:#5197F4;
+            border-color: #5197F4;
+            background-blend-mode: luminosity;
+            border-radius: 5px;
+        }
+
+        #autoComplete::placeholder {
+            color:#5197F4; 
+            /* #7ED957 */
+        }
+
+        /* ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d'] */
+        /* custom marker styling */
+        .div-marker > div {
+            background-color: #e41a1c;
+            padding: 5px;
+            width: 25px;
+            height: 30px;
+            border-radius: 50% 30% 40% 30%;
+            box-shadow: 0 0 0.4em #222221;
+            mix-blend-mode: color;
+
+            font-weight: 700;
+            text-align: center;
+            color:white;
+        }
+
+        .div-marker > div.church-icon {
+            background-color: #ff7f00;
+            padding: 5px;
+            width: 25px;
+            height: 30px;
+            border-radius: 5%;
+            box-shadow: 0 0 0.4em #222221;
+            mix-blend-mode: color;
+            border-radius: 10% 10% 30% 30%;
+        }
+
+        .div-marker div.church-icon::after {
+            border: 8px solid #ff7f00;
+            border-color: #ff7f00 transparent transparent transparent;
+        }
+
+        .div-marker div::after {
+            position: absolute;
+            bottom: -31.5px;
+            left: 4.5px;
+            border: 8px solid #e41a1c;
+            content: " ";
+            border-color: #e41a1c transparent transparent transparent;
+            z-index: -1;
+            /* box-shadow: 0 0 0.4em #222221; */
+        }
+
+        .marker-cluster {
+            width: auto;
+            height: auto;   
+            border:none;
+            background-color: transparent;
+        }
+
+        .cluster-marker {
+            width: 30px;
+            height: 30px;
+            border-radius: 20% 30% 40% 50%;
+            background-color: #5197F4;
+            text-align: center;
+            box-shadow: 0px 0px 0.8rem #5197F4;
+            color:white;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* popup-stylin */
+        .leaflet-popup-content h2, .leaflet-popup-content p {
+            margin: 0 !important;
+        }
+
+        .leaflet-popup .leaflet-popup-content-wrapper {
+            padding: 1px;
+            text-align: left;
+            border-radius: 5px 5px 5px 15px;
+        }
+
+        .contact-section:nth-child(n){
+            margin: 0;
+        }
+
+        .contact-section p {
+            margin: 0.5rem 0;
+            font-size: calc(1em + 0.5vw);
+            letter-spacing: 0.01em;
+        }
+        .contact-section h6 {
+            text-transform: uppercase;
+            font-size: 1.2rem;
+            margin:0.5rem;
+        }
+        @media only screen and (max-width: 600px) {
+            .filter div {
+                width: 100%;
+            }
+
+            .autoComplete_wrapper {
+                width: 100%;
+            }
+
+            #autoComplete {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- filters -->
+    <div class="map-wrapper">
+        <div class="contact-section">
+            <p style="text-align: center;">
+                Know of collaborative gospel work that’s not shown on the map? <a href="mailto:info@citygospelmovements.org" target="_blank" rel="noopener noreferrer">Let us know</a>!
+            </p>
+            <h6 style="text-align: center;">
+                <span class="color-mintBlue" style="font-size: 1.5em; color: #5197F4;">
+                    <strong>
+                        <span id="map-counter" data-count="0">0</span> 
+                    </strong>
+                </span>gospel movements and partners
+            </h6>
+        </div>
+        <div class="filter-container">
+            <ul class="filter" id="filter">
+                <div>
+                    <input id="autoComplete">
+                </div>
+            </ul>
+        </div>
+
+        <div id="map"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.6/dist/autoComplete.min.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.3.0/d3.min.js" integrity="sha512-NMhzM2RHzbCRO0s5VPaRC+2bW6nmNXimzC9p5sp2x19M+zzuSJ2T50dEQ7hpHkNjnX1mt8nQg1NNthwRZgsoIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="neighbourhood.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
